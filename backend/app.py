@@ -20,7 +20,7 @@ if __name__ == '__main__':
         is_admin_exists = User.query.filter_by(role='admin').first() is not None
 
         if not is_admin_exists:
-            admin_user = User(username='admin', email='admin@gmail.com', password='1234', role='admin')
+            admin_user = User(name='admin', email='admin@gmail.com', password='1234', role='admin')
             db.session.add(admin_user)
             db.session.commit()
             print('Admin user created with email: admin@gmail.com and password: 1234')
