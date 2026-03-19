@@ -1,5 +1,6 @@
 from flask_restful import Resource, Api
 from flask import request
+from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
 
 from models import db, User, Mobile
 
@@ -36,8 +37,8 @@ class LoginResource(Resource):
         user = User.query.filter_by(email=data['email'], password=data['password']).first()
         if not user:
             return {'message': "Invalid email or password"}, 401
-        print(f"User {user.name} logged in successfully!")
-        return {'message': f"User logged in successfully!"}, 200
+        access_token = create_access_token(identity=user.email)
+        return {'message': f"User logged in successfully!", 'access_token': access_token}, 200
 api.add_resource(LoginResource, '/login')
 
 #### user and admin routes #####
@@ -65,7 +66,12 @@ api.add_resource(HelloWorldResource, '/hello')
 
 class MobileResource(Resource):
 
+    @jwt_required()
     def get(self, mobile_id=None):
+        logged_in_user_email = get_jwt_identity()
+        logged_in_user = User.query.filter_by(email=logged_in_user_email).first()
+        print(f"Logged in user: {logged_in_user.name} with role: {logged_in_user.role}")
+
         if mobile_id is not None:
             mobile = Mobile.query.get(mobile_id)
             if not mobile:
@@ -77,7 +83,12 @@ class MobileResource(Resource):
             mobiles = [{'id': m.id, 'name': m.name, 'color': m.color, 'ram': m.ram, 'price': m.price} for m in mobiles]
             return {'message': "fetched all mobiles", 'mobiles': mobiles}, 200
         
+    @jwt_required()
     def post(self, mobile_id=None):
+        loggedin_user = User.query.filter_by(email=get_jwt_identity()).first()
+        if loggedin_user.role != 'admin':
+            return {'message': 'Only admin users can delete mobiles'}, 403
+
         if mobile_id:
             return {'message': 'Mobile ID should not be provided for POST requests'}, 400
         data = request.get_json()
@@ -90,7 +101,12 @@ class MobileResource(Resource):
         mobile = {'id': mobile.id, 'name': mobile.name, 'color': mobile.color, 'ram': mobile.ram, 'price': mobile.price}
         return {'message': f"Mobile created successfully with id {mobile['id']}", 'mobile': mobile}, 201
     
+    @jwt_required()
     def put(self, mobile_id=None):
+        loggedin_user = User.query.filter_by(email=get_jwt_identity()).first()
+        if loggedin_user.role != 'admin':
+            return {'message': 'Only admin users can delete mobiles'}, 403
+
         if not mobile_id:
             return {'message': 'Mobile ID is required for PUT requests'}, 400
         mobile = Mobile.query.get(mobile_id)
@@ -108,7 +124,12 @@ class MobileResource(Resource):
         mobile = {'id': mobile.id, 'name': mobile.name, 'color': mobile.color, 'ram': mobile.ram, 'price': mobile.price}
         return {'message': f"Mobile updated successfully with id {mobile_id}", 'mobile': mobile}, 200
     
+    @jwt_required()
     def delete(self, mobile_id=None):
+        loggedin_user = User.query.filter_by(email=get_jwt_identity()).first()
+        if loggedin_user.role != 'admin':
+            return {'message': 'Only admin users can delete mobiles'}, 403
+
         if not mobile_id:
             return {'message': 'Mobile ID is required for DELETE requests'}, 400
         mobile = Mobile.query.get(mobile_id)
