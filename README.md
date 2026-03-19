@@ -8,3 +8,7 @@
 5. pip install -r requrements.txt // install packanges
 6. python app.py
 
+## To run frontend
+1. cd frontend
+2. npm install
+3. npm run dev
