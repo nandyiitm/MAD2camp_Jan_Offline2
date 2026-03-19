@@ -22,7 +22,7 @@ class RegisterResource(Resource):
             return {'message': "All fields must be non-empty"}, 400
         is_user_exists = User.query.filter_by(email=data['email']).first()
         if is_user_exists:
-            return {'message': "User with this email already exists"}, 400
+            return {'message': "User with this email already exists"}, 409
         user = User(name=data['name'], email=data['email'], password=data['password'])
         db.session.add(user)
         db.session.commit()

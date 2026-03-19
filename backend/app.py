@@ -1,7 +1,9 @@
 from flask import Flask
 from flask_jwt_extended import JWTManager
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)  # Allow CORS for all routes and origins by default
 
 # Setup the Flask-JWT-Extended extension
 app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
