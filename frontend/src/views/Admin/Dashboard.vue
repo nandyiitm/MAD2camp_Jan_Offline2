@@ -12,7 +12,9 @@
         <input v-model.number="FormData.ram" type="number" placeholder="RAM (GB)" required />
         <input v-model.number="FormData.price" type="number" placeholder="Price (₹)" required />
 
-        <button type="submit">➕ Create Mobile</button>
+        <button type="submit" :disabled="creating">
+          {{ creating ? 'Creating...' : '➕ Create Mobile' }}
+        </button>
       </form>
     </div>
 
@@ -20,7 +22,19 @@
     <div class="card">
       <h2>📱 Mobiles List</h2>
 
-      <div class="mobile-grid">
+      <!-- 🔄 LOADING UI -->
+      <div v-if="loading" class="loading-container">
+        <div class="spinner"></div>
+        <p>Fetching mobiles...</p>
+      </div>
+
+      <!-- 📭 EMPTY -->
+      <div v-else-if="mobiles.length === 0" class="empty">
+        <p>No mobiles found 😕</p>
+      </div>
+
+      <!-- ✅ DATA -->
+      <div v-else class="mobile-grid">
         <div class="mobile-card" v-for="mobile in mobiles" :key="mobile.id">
           <h3>{{ mobile.name }}</h3>
 
@@ -35,10 +49,115 @@
       </div>
     </div>
   </div>
-
-  <!-- <pre>{{ mobiles }}</pre> -->
-
 </template>
+
+<script>
+import { RouterLink } from 'vue-router';
+
+export default {
+  name: 'AdminDashboard',
+
+  data() {
+    return {
+      FormData: {
+        name: '',
+        color: '',
+        ram: '',
+        price: ''
+      },
+      mobiles: [],
+      loading: false,
+      creating: false
+    }
+  },
+
+  methods: {
+    async createMobile() {
+      this.creating = true;
+
+      try {
+        const response = await fetch('http://localhost:5000/mobiles', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify(this.FormData)
+        });
+
+        if (response.status === 401) {
+          alert('Unauthorized! Please log in again.');
+          localStorage.clear();
+          window.location.href = '/login';
+          return;
+        }
+
+        const data = await response.json();
+
+        this.mobiles = [...this.mobiles, data.mobile];
+
+        // 🔄 reset form
+        this.FormData = {
+          name: '',
+          color: '',
+          ram: '',
+          price: ''
+        };
+
+      } catch (error) {
+        console.error(error);
+      } finally {
+        this.creating = false;
+      }
+    },
+
+    async loadMobiles() {
+      this.loading = true;
+
+      try {
+        const response = await fetch('http://localhost:5000/mobiles', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        if (response.status === 401) {
+          alert('Unauthorized! Please log in again.');
+          localStorage.clear();
+          window.location.href = '/login';
+          return;
+        }
+
+        const data = await response.json();
+        this.mobiles = data.mobiles;
+
+      } catch (error) {
+        console.error(error);
+      } finally {
+        this.loading = false;
+      }
+    }
+  },
+
+  mounted() {
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    if (!user) {
+      alert('You must be logged in');
+      window.location.href = '/login';
+      return;
+    }
+
+    if (user.role !== 'admin') {
+      alert('Access denied');
+      window.location.href = '/user';
+      return;
+    }
+
+    this.loadMobiles();
+  }
+}
+</script>
 
 <style>
 .container {
@@ -83,6 +202,11 @@
   cursor: pointer;
 }
 
+.form-card button:disabled {
+  background: #999;
+  cursor: not-allowed;
+}
+
 /* GRID */
 .mobile-grid {
   display: grid;
@@ -118,87 +242,34 @@
   padding: 6px 10px;
   border-radius: 6px;
 }
-</style>
 
-<script>
-import { RouterLink } from 'vue-router';
-
-export default {
-    name: 'AdminDashboard',
-    data() {
-        return {
-            FormData: {
-                name: '',
-                color: '',
-                ram: '',
-                price: ''
-            },
-            mobiles: []
-            // You can add any data properties you need here
-        }
-    },
-    methods: {
-        // You can add any methods you need here
-        async createMobile() {
-            const response = await fetch('http://localhost:5000/mobiles', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify(this.FormData)
-            });
-            console.log(response);
-            if (response.status === 401) {
-                alert('Unauthorized! Please log in again.')
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                window.location.href = '/login';
-                return;
-            }
-            const data = await response.json();
-            console.log(data);
-            this.mobiles.push(data.mobile);
-        },
-        async loadMobiles(){
-            const response = await fetch('http://localhost:5000/mobiles', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            console.log(response);
-            if (response.status === 401) {
-                alert('Unauthorized! Please log in again.')
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                window.location.href = '/login';
-                return;
-            }
-            const data = await response.json();
-            console.log(data);
-            this.mobiles = data.mobiles;
-        }
-
-    },
-    mounted() {
-        // You can add any code you want to run when the component is mounted here
-        console.log('Admin Dashboard mounted!')
-
-        if (localStorage.getItem('user')) {
-            const user = JSON.parse(localStorage.getItem('user'))
-            if (user.role !== 'admin') {
-                alert('Access denied! You are not an admin.')
-                window.location.href = '/user'
-            }
-        } else {
-            alert('You must be logged in to access this page.')
-            window.location.href = '/login'
-        }
-
-        this.loadMobiles();
-    
-    }
+/* LOADING */
+.loading-container {
+  text-align: center;
+  padding: 30px;
 }
-</script>
+
+.spinner {
+  margin: 0 auto 10px;
+  width: 30px;
+  height: 30px;
+  border: 4px solid #ccc;
+  border-top: 4px solid #1976d2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* EMPTY */
+.empty {
+  text-align: center;
+  padding: 20px;
+  color: gray;
+}
+
+/* ANIMATION */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+</style>

@@ -1,10 +1,12 @@
 from flask_restful import Resource, Api
 from flask import request
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
+from flask_caching import Cache
 
 from models import db, User, Mobile
 
 api = Api()
+cache = Cache()
 
 # @app.route('/hello')
 # def hello_world():
@@ -65,13 +67,16 @@ class HelloWorldResource(Resource):
     
 api.add_resource(HelloWorldResource, '/hello')
 
+import time
+
 class MobileResource(Resource):
 
-    @jwt_required()
+    # @jwt_required()
+    @cache.cached(timeout=10)  # Cache GET responses for 60 seconds, vary by query string
     def get(self, mobile_id=None):
-        logged_in_user_email = get_jwt_identity()
-        logged_in_user = User.query.filter_by(email=logged_in_user_email).first()
-        print(f"Logged in user: {logged_in_user.name} with role: {logged_in_user.role}")
+        # logged_in_user_email = get_jwt_identity()
+        # logged_in_user = User.query.filter_by(email=logged_in_user_email).first()
+        # print(f"Logged in user: {logged_in_user.name} with role: {logged_in_user.role}")
 
         if mobile_id is not None:
             mobile = Mobile.query.get(mobile_id)
@@ -80,7 +85,8 @@ class MobileResource(Resource):
             mobile = {'id': mobile.id, 'name': mobile.name, 'color': mobile.color, 'ram': mobile.ram, 'price': mobile.price}
             return {'message': f"fetched mobile information with id {mobile_id}", 'mobile': mobile}, 200
         else:
-            mobiles = Mobile.query.all()
+            mobiles = Mobile.query.all() # querying all mobiles from database
+            time.sleep(10)  # Simulate delay
             mobiles = [{'id': m.id, 'name': m.name, 'color': m.color, 'ram': m.ram, 'price': m.price} for m in mobiles]
             return {'message': "fetched all mobiles", 'mobiles': mobiles}, 200
         

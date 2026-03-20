@@ -15,8 +15,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 from models import db, User
 db.init_app(app)
 
-from routes import api
-api.init_app(app)
+from routes import api, cache
+app.config['CACHE_TYPE'] = 'RedisCache'  # Use Redis cache
+app.config['CACHE_REDIS_URL'] = 'redis://localhost:6379/0'  # Redis connection URL
+cache.init_app(app)  # Initialize cache with the Flask app
+api.init_app(app) # Initialize API with the Flask app
 
 if __name__ == '__main__':
 
