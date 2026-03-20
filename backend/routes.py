@@ -38,7 +38,8 @@ class LoginResource(Resource):
         if not user:
             return {'message': "Invalid email or password"}, 401
         access_token = create_access_token(identity=user.email)
-        return {'message': f"User logged in successfully!", 'access_token': access_token}, 200
+        user = {'id': user.id, 'name': user.name, 'email': user.email, 'role': user.role}
+        return {'message': f"User logged in successfully!", 'access_token': access_token, 'user': user}, 200
 api.add_resource(LoginResource, '/login')
 
 #### user and admin routes #####

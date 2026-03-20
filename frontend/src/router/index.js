@@ -27,10 +27,25 @@ const router = createRouter({
       path: '/register',
       name: 'register',
       component: () => import('../views/Auth/RegisterView.vue'),
-    }
+    },
     // Admin routes
+    {
+      path: '/admin',
+      name: 'admin-dashboard',
+      component: () => import('../views/Admin/Dashboard.vue'),
+    },
+    {
+      path: '/admin/mobiles/:id',
+      name: 'admin-mobile-view',
+      component: () => import('../views/Admin/MobileView.vue'),
+    },
     
     // User routes
+    {
+      path: '/user',
+      name: 'user-dashboard',
+      component: () => import('../views/User/Dashboard.vue'),
+    }
 
   ],
 })

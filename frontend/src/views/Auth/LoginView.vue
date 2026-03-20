@@ -2,23 +2,78 @@
 
     <h1>Login to your account to continue</h1>
 
-    <form method="POST">
+    <form @submit.prevent="login">
         <div>
             <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
+            <input type="email" id="email" name="email" v-model="formData.email" required>
         </div>
         <div>
             <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
+            <input type="password" id="password" name="password" v-model="formData.password" required>
         </div>
         <button type="submit">Login</button>
     </form>
+
+    <p :class="status ? 'success' : 'error'">{{ message }}</p>
 
     <p>Don't have an account? <router-link to="/register">Register here</router-link></p>
 
 </template>
 <script setup>
 import { RouterLink } from 'vue-router'
+import {ref, reactive, onMounted} from 'vue'
+
+const formData = reactive({
+    email: '',
+    password: ''
+})
+const message = ref('')
+const status = ref(false)
+
+async function login() {
+    console.log('Login form submitted with data:', formData)
+
+    const response = await fetch('http://localhost:5000/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+
+    console.log('Response from server:', response)
+    
+    let data = await response.json()
+
+    if (!response.ok) {
+        message.value = 'Login failed: ' + data.message
+        return
+    } else {
+        console.log('Login successful, data from server:', data)
+        message.value = 'Login successful! Redirecting...'
+        status.value = true
+
+        // Store the token and user info in localStorage
+        localStorage.setItem('token', data.access_token)
+        localStorage.setItem('user', JSON.stringify(data.user))
+
+        setTimeout(() => {
+            if (data.user.role === 'admin') {
+                window.location.href = '/admin'
+            } else {
+                window.location.href = '/user'
+            }
+        }, 3000)
+
+
+
+    }
+
+    
+
+    console.log('Data from server:', data)
+
+}
 
 </script>
 
@@ -97,6 +152,12 @@ p {
     text-align: center;
     margin-top: 15px;
     color: #444;
+}
+p.error {
+    color: red;
+}
+p.success {
+    color: green;
 }
 
 /* Link */
