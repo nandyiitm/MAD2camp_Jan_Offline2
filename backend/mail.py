@@ -75,11 +75,13 @@ SMTP_HOST = 'localhost'
 SMTP_PORT = 1025
 FROM_EMAIL = 'admin@gmail.com'
 
-def send_email(to_email, subject, body):
+def send_email(to_email, subject, body, report_url=None):
     msg = MIMEMultipart()
     msg['From'] = FROM_EMAIL
     msg['To'] = to_email
     msg['Subject'] = subject
+    if report_url:
+        body += f"\n\nYou can view the report here: <a href='{report_url}' target='_blank'>Download Report</a>"
     body = html_template.format(subject=subject, body=body)
     msg.attach(MIMEText(body, 'html'))
 

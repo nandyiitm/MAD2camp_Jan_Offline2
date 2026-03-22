@@ -148,3 +148,17 @@ class MobileResource(Resource):
     
 api.add_resource(MobileResource, '/mobiles', '/mobiles/<int:mobile_id>')
 
+
+class DownloadMobileCSV(Resource):
+    # @jwt_required()
+    def get(self):
+        # loggedin_user = User.query.filter_by(email=get_jwt_identity()).first()
+        # if loggedin_user.role != 'admin':
+        #     return {'message': 'Only admin users can download mobile data'}, 403
+        loggedin_user = User.query.filter_by(email='admin@gmail.com').first()
+        
+        from celery_app import send_report
+        send_report.delay(loggedin_user.email)  # Trigger the Celery task to send the report in background
+        # send_report(loggedin_user.email)  # Trigger the function without celery
+        return {'message': 'CSV report generation initiated, you\'ll receive a mail once done!'}, 200
+api.add_resource(DownloadMobileCSV, '/mobiles/download_csv')
