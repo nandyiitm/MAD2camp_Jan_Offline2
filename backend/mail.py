@@ -34,7 +34,7 @@ html_template = """
 
                             <!-- Button -->
                             <div style="text-align:center; margin:30px 0;">
-                                <a href="https://localhost:5173"
+                                <a href="http://localhost:5173"
                                    target="_blank"
                                    style="background:#4f46e5;
                                           color:#ffffff;
@@ -49,7 +49,7 @@ html_template = """
 
                             <p style="font-size:13px; color:#777;">
                                 If the button doesn't work, copy and paste this link into your browser:<br>
-                                <a href="https://localhost:5173" style="color:#4f46e5;">https://localhost:5173</a>
+                                <a href="http://localhost:5173" style="color:#4f46e5;">http://localhost:5173</a>
                             </p>
                         </td>
                     </tr>
@@ -88,4 +88,4 @@ def send_email(to_email, subject, body):
         server.send_message(msg)
 
 if __name__ == "__main__":
-    send_email('user@example.com', 'Test Subject', 'Test Body')
+    send_email('user@example.com', 'Test Subject', 'Welcome to Mobile Shopping!, Check out our latest collection of mobiles.')
